@@ -1,0 +1,112 @@
+version: 2
+
+models:
+  - name: dim_date
+    description: Calendar date dimension generated from the min/max pickup dates in staging.
+    columns:
+      - name: date_day
+        description: Calendar date — primary key
+        tests:
+          - not_null
+          - unique
+      - name: year
+        description: Calendar year
+        tests:
+          - not_null
+      - name: month
+        description: Month number (1–12)
+        tests:
+          - not_null
+      - name: is_weekend
+        description: True if Saturday or Sunday
+        tests:
+          - not_null
+
+  - name: dim_location
+    description: NYC taxi zone lookup — 265 zones mapped to borough, zone name, and service zone.
+    columns:
+      - name: location_id
+        description: TLC taxi zone ID — primary key
+        tests:
+          - not_null
+          - unique
+      - name: borough
+        description: NYC borough name
+        tests:
+          - not_null
+      - name: zone_name
+        description: Taxi zone name within the borough
+      - name: service_zone
+        description: Service zone category (Yellow Zone, Boro Zone, EWR, etc.)
+
+  - name: fact_trips
+    description: >
+      One row per clean NYC Yellow Taxi trip. Anomalous rows (negative fares, null passengers,
+      extreme durations) are excluded. Natural foreign keys reference dim tables.
+    columns:
+      - name: pickup_datetime
+        description: Trip pickup timestamp
+        tests:
+          - not_null
+      - name: dropoff_datetime
+        description: Trip dropoff timestamp
+        tests:
+          - not_null
+      - name: pickup_date
+        description: Pickup date (truncated from pickup_datetime) — join key to dim_date
+        tests:
+          - not_null
+      - name: pickup_location_id
+        description: TLC zone ID for pickup — FK to dim_location.location_id
+        tests:
+          - not_null
+      - name: dropoff_location_id
+        description: TLC zone ID for dropoff — FK to dim_location.location_id
+        tests:
+          - not_null
+      - name: payment_type
+        description: FK to dim_payment_type.payment_type_id
+        tests:
+          - not_null
+      - name: rate_code_id
+        description: FK to dim_rate_code.rate_code_id
+        tests:
+          - not_null
+      - name: passenger_count
+        description: Number of passengers (non-null — null rows are excluded as anomalies)
+        tests:
+          - not_null
+      - name: fare_amount
+        description: Metered fare in USD
+        tests:
+          - not_null
+      - name: total_amount
+        description: Total amount charged in USD
+        tests:
+          - not_null
+      - name: trip_duration_minutes
+        description: Trip duration in decimal minutes
+        tests:
+          - not_null
+
+  - name: fact_hourly_summary
+    description: >
+      Hourly trip aggregations per pickup location. One row per (hour, pickup_location_id).
+      Derived from fact_trips — inherits the anomaly filter.
+    columns:
+      - name: pickup_hour
+        description: Pickup hour (truncated to the hour)
+        tests:
+          - not_null
+      - name: pickup_location_id
+        description: TLC zone ID for pickup
+        tests:
+          - not_null
+      - name: trip_count
+        description: Number of trips in this hour and location
+        tests:
+          - not_null
+      - name: total_revenue
+        description: Sum of total_amount for all trips in this hour and location
+        tests:
+          - not_null

@@ -1,4 +1,4 @@
-.PHONY: up down restart logs ps ingest dbt-run dbt-test dbt-docs test clean setup
+.PHONY: up down restart logs ps ingest ingest-zones dbt-run dbt-test dbt-docs test clean setup
 
 # ──────────────────────────────────────
 # Docker
@@ -25,31 +25,33 @@ ps:
 # Data Ingestion
 # ──────────────────────────────────────
 ingest:
-	python scripts/ingest.py --year $(YEAR) --month $(MONTH)
+	.venv/bin/python scripts/ingest.py --year $(YEAR) --month $(MONTH)
 
 ingest-zones:
-	python scripts/ingest.py --zones-only
+	.venv/bin/python scripts/ingest.py --zones-only
 
 # ──────────────────────────────────────
 # dbt
 # ──────────────────────────────────────
+DBT = cd dbt && .venv/bin/dbt --profiles-dir .
+
 dbt-run:
-	cd dbt && dbt run
+	$(DBT) run
 
 dbt-run-staging:
-	cd dbt && dbt run --select staging
+	$(DBT) run --select staging
 
 dbt-run-marts:
-	cd dbt && dbt run --select marts
+	$(DBT) run --select marts
 
 dbt-test:
-	cd dbt && dbt test
+	$(DBT) test
 
 dbt-docs:
-	cd dbt && dbt docs generate && dbt docs serve
+	$(DBT) docs generate && $(DBT) docs serve
 
 dbt-fresh:
-	cd dbt && dbt run --full-refresh
+	$(DBT) run --full-refresh
 
 # ──────────────────────────────────────
 # Testing

@@ -1,0 +1,91 @@
+version: 2
+
+models:
+  - name: stg_yellow_taxi_trips
+    description: >
+      Cleaned and typed NYC Yellow Taxi trip records. One row per trip.
+      Money columns cast to NUMERIC(10,2). Duration and anomaly flag derived here.
+      Anomalous rows are flagged with is_anomaly = true but not dropped — marts filter as needed.
+
+    columns:
+      - name: vendor_id
+        description: Taxi vendor identifier (1 = Creative Mobile Technologies, 2 = VeriFone)
+
+      - name: pickup_datetime
+        description: Trip pickup timestamp
+        tests:
+          - not_null
+
+      - name: dropoff_datetime
+        description: Trip dropoff timestamp
+        tests:
+          - not_null
+
+      - name: passenger_count
+        description: Number of passengers (nullable — 140k rows in Jan 2024 have no value)
+
+      - name: trip_distance
+        description: Trip distance in miles as reported by the taximeter
+
+      - name: rate_code_id
+        description: Rate code applied to the trip (1=Standard, 2=JFK, 3=Newark, 4=Nassau/Westchester, 5=Negotiated, 6=Group ride)
+
+      - name: store_and_fwd_flag
+        description: True if trip record was held in vehicle memory before sending (poor connectivity)
+
+      - name: pickup_location_id
+        description: TLC taxi zone ID for pickup location
+        tests:
+          - not_null
+
+      - name: dropoff_location_id
+        description: TLC taxi zone ID for dropoff location
+        tests:
+          - not_null
+
+      - name: payment_type
+        description: Payment method code
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [0, 1, 2, 3, 4, 5, 6]  # 0 appears on anomalous rows (null passenger_count)
+
+      - name: fare_amount
+        description: Metered fare amount in USD, cast to NUMERIC(10,2)
+        tests:
+          - not_null
+
+      - name: extra
+        description: Miscellaneous extras and surcharges
+
+      - name: mta_tax
+        description: MTA tax in USD
+
+      - name: tip_amount
+        description: Tip amount in USD (auto-populated for credit card tips only)
+
+      - name: tolls_amount
+        description: Total tolls paid in USD
+
+      - name: improvement_surcharge
+        description: Improvement surcharge in USD
+
+      - name: total_amount
+        description: Total amount charged in USD
+
+      - name: congestion_surcharge
+        description: Congestion surcharge in USD
+
+      - name: airport_fee
+        description: Airport pickup/dropoff surcharge in USD
+
+      - name: trip_duration_minutes
+        description: Trip duration in decimal minutes, derived from dropoff_datetime - pickup_datetime
+
+      - name: is_anomaly
+        description: >
+          True if the row has any data quality issue: negative fare, negative distance,
+          negative or >24h duration, or null passenger count.
+        tests:
+          - not_null

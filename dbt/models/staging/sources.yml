@@ -1,0 +1,60 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: raw
+    description: Raw ingested data loaded by scripts/ingest.py
+    tables:
+      - name: yellow_taxi_trips
+        description: NYC Yellow Taxi trip records, one row per trip, loaded monthly from TLC Parquet files.
+        columns:
+          - name: vendor_id
+            description: Taxi vendor identifier (1 = Creative Mobile Technologies, 2 = VeriFone)
+          - name: pickup_datetime
+            description: Trip pickup timestamp
+          - name: dropoff_datetime
+            description: Trip dropoff timestamp
+          - name: passenger_count
+            description: Number of passengers (self-reported by driver, nullable)
+          - name: trip_distance
+            description: Trip distance in miles
+          - name: rate_code_id
+            description: Rate code applied to the trip
+          - name: store_and_fwd_flag
+            description: Whether the trip record was held in vehicle before sending to vendor (Y/N)
+          - name: pickup_location_id
+            description: TLC taxi zone ID for pickup location
+          - name: dropoff_location_id
+            description: TLC taxi zone ID for dropoff location
+          - name: payment_type
+            description: Payment method (1=Credit, 2=Cash, 3=No charge, 4=Dispute, 5=Unknown, 6=Voided)
+          - name: fare_amount
+            description: Metered fare amount
+          - name: extra
+            description: Miscellaneous extras and surcharges
+          - name: mta_tax
+            description: MTA tax
+          - name: tip_amount
+            description: Tip amount (auto-populated for credit card tips)
+          - name: tolls_amount
+            description: Total tolls paid
+          - name: improvement_surcharge
+            description: Improvement surcharge
+          - name: total_amount
+            description: Total amount charged to passengers
+          - name: congestion_surcharge
+            description: Congestion surcharge
+          - name: airport_fee
+            description: Airport pickup/dropoff fee
+
+      - name: taxi_zone_lookup
+        description: TLC taxi zone reference data — 265 zones with borough and service zone.
+        columns:
+          - name: location_id
+            description: TLC taxi zone ID (1–265)
+          - name: borough
+            description: NYC borough
+          - name: zone
+            description: Taxi zone name
+          - name: service_zone
+            description: Service zone category

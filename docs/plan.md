@@ -4,59 +4,62 @@ _This is a living document. Claude MUST update task checkboxes after completing 
 _Mark tasks: `[x]` when done, `[~]` if partially done, `[ ]` if not started._
 _Add new tasks under the correct phase if scope changes._
 
-**Current Phase: 1 — Infrastructure**
+**Current Phase: 4 — Orchestration (Complete)**
 **Last Updated: 2026-04-11**
 
 ---
 
 ## Phase 1: Infrastructure (Days 1-2)
-- [ ] Set up Docker Compose with PostgreSQL
-- [ ] Verify Postgres connection and create schemas (`raw`, `staging`, `marts`)
-- [ ] Create `Makefile` with common commands
-- [ ] Set up Python virtual environment and `requirements.txt`
-- [ ] Set up `.gitignore`, `.env.example`
-- [ ] Initialize git repo with first commit
+- [x] Set up Docker Compose with PostgreSQL
+- [x] Verify Postgres connection and create schemas (`raw`, `staging`, `marts`)
+- [x] Create `Makefile` with common commands
+- [x] Set up Python virtual environment and `requirements.txt`
+- [x] Set up `.gitignore`, `.env.example`
+- [x] Initialize git repo with first commit
 
 ## Phase 2: Data Ingestion (Days 3-5)
-- [ ] Write `scripts/ingest.py` — download Parquet from TLC
-- [ ] Add validation (schema check, row count, date range)
-- [ ] Implement bulk loading into `raw.yellow_taxi_trips` via `COPY`
-- [ ] Download taxi zone lookup CSV and load into `raw.taxi_zone_lookup`
-- [ ] Create `raw.ingestion_log` table to track loads
-- [ ] Test: load January 2024 data successfully
+- [x] Write `scripts/ingest.py` — download Parquet from TLC
+- [x] Add validation (schema check, row count, date range)
+- [x] Implement bulk loading into `raw.yellow_taxi_trips` via `COPY`
+- [x] Download taxi zone lookup CSV and load into `raw.taxi_zone_lookup` (via --zones-only flag)
+- [x] Create `raw.ingestion_log` table to track loads (DDL was in init-db.sql)
+- [x] Test: load January 2024 data successfully (2,964,606 rows)
 - [ ] Test: re-running for same month is idempotent
-- [ ] Write unit tests in `tests/test_ingest.py`
+- [x] Write unit tests in `tests/test_ingest.py`
 
 ## Phase 3: dbt Transformations (Days 6-10)
-- [ ] Initialize dbt project: `dbt init nyc_taxi`
-- [ ] Configure `profiles.yml` for local Postgres
-- [ ] Create `sources.yml` pointing to raw schema
-- [ ] Build `stg_yellow_taxi_trips` (rename, cast, filter)
-- [ ] Build `dim_date` (generate date spine)
-- [ ] Build `dim_location` (from taxi zone lookup)
-- [ ] Build `dim_payment_type` (static seed or model)
-- [ ] Build `dim_rate_code` (static seed or model)
-- [ ] Build `fact_trips` (join dims, compute duration, flag anomalies)
-- [ ] Build `fact_hourly_summary` (aggregate by hour and zone)
-- [ ] Write `schema.yml` for all models with tests
-- [ ] Add custom tests (positive fares, valid durations)
+- [x] Initialize dbt project: `dbt init nyc_taxi`
+- [x] Configure `profiles.yml` for local Postgres
+- [x] Create `sources.yml` pointing to raw schema
+- [x] Build `stg_yellow_taxi_trips` (rename, cast, filter)
+- [x] Build `dim_date` (generate date spine)
+- [x] Build `dim_location` (from taxi zone lookup)
+- [x] Build `dim_payment_type` (static seed or model)
+- [x] Build `dim_rate_code` (static seed or model)
+- [x] Build `fact_trips` (join dims, compute duration, flag anomalies)
+- [x] Build `fact_hourly_summary` (aggregate by hour and zone)
+- [x] Write `schema.yml` for all models with tests
+- [x] Add custom tests (positive fares, valid durations)
 - [ ] Run `dbt docs generate` and verify documentation
 
 ## Phase 4: Orchestration (Days 11-14)
-- [ ] Add Airflow to Docker Compose
-- [ ] Write DAG `dags/nyc_taxi_monthly.py`
-- [ ] Implement tasks: download → validate → load → dbt_run → dbt_test
-- [ ] Add error handling and retries
-- [ ] Test DAG execution via Airflow UI
+- [x] Add Airflow to Docker Compose
+- [x] Write DAG `dags/nyc_taxi_monthly.py`
+- [x] Implement tasks: ingest_trips → dbt_seed → dbt_run → dbt_test
+- [x] Add error handling and retries (retries=1 on all except dbt_test)
+- [x] Test DAG execution via Airflow UI — all 4 tasks success for year=2024, month=1
 - [ ] Verify idempotency (run DAG twice for same month)
 
 ## Phase 5: Dashboard (Days 15-16)
-- [ ] Add Metabase to Docker Compose
-- [ ] Connect Metabase to Postgres
-- [ ] Build chart: trip volume by hour-of-day heatmap
-- [ ] Build chart: average fare by borough
-- [ ] Build chart: monthly trip volume trend
-- [ ] Build chart: data quality (records dropped per stage)
+- [x] Add Metabase to Docker Compose
+- [x] Switch Metabase internal DB to Postgres (persistent config)
+- [x] Connect Metabase to Postgres marts schema
+- [x] Build chart: trip volume by borough (bar)
+- [x] Build chart: average fare + tip by borough (bar)
+- [x] Build chart: hourly trip patterns by hour of day (line)
+- [x] Build chart: data quality anomaly rate by day (line)
+- [x] Assemble all 4 into "NYC Taxi — January 2024" dashboard
+- [x] Save dashboard screenshot to docs/dashboard_screenshot.png
 
 ## Phase 6: Polish (Days 17-18)
 - [ ] Write comprehensive README.md
@@ -64,3 +67,10 @@ _Add new tasks under the correct phase if scope changes._
 - [ ] Record 2-minute demo walkthrough
 - [ ] Final code review and cleanup
 - [ ] Push to GitHub
+
+---
+
+## Notes
+- Phase 1 is considered complete because Postgres is running, schemas exist, the virtual environment is set up, `.env` and `.env.example` exist, and the repository scaffold is already in place.
+- The immediate next task is `scripts/ingest.py` for downloading one month of TLC Yellow Taxi data and loading it into `raw.yellow_taxi_trips`.
+- Task-specific implementation plans should be written to `docs/plans/` via the Claude `/plan` workflow before coding new features.
