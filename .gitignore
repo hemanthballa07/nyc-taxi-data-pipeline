@@ -29,6 +29,11 @@ build/
 dbt/target/
 dbt/dbt_packages/
 dbt/logs/
+dbt/.user.yml
+
+# Archives
+*.tar.gz
+*.zip
 
 # Docker
 docker/volumes/

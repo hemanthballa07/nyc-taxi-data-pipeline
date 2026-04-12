@@ -1,7 +1,7 @@
 # Architecture
 
 ## Current State
-_Last updated: 2026-04-11_
+_Last updated: 2026-04-12_
 
 | Component         | Status       | Notes                              |
 |-------------------|--------------|------------------------------------|
@@ -16,16 +16,16 @@ _Last updated: 2026-04-11_
 ### Tables in Database
 | Schema   | Table                  | Status       | Row Count |
 |----------|------------------------|--------------|-----------|
-| raw      | yellow_taxi_trips      | ✅ Loaded    | 2,964,606 |
-| raw      | taxi_zone_lookup       | ✅ DDL ready | 0         |
-| raw      | ingestion_log          | ✅ Active    | 1         |
-| staging  | stg_yellow_taxi_trips  | ✅ Built     | 2,964,606 |
-| marts    | dim_date               | ✅ Built     | 31        |
-| marts    | dim_location           | ✅ Built     | 265       |
-| marts    | dim_payment_type       | ✅ Built     | 7         |
-| marts    | dim_rate_code          | ✅ Built     | 7         |
-| marts    | fact_trips             | ✅ Built     | 2,789,040 |
-| marts    | fact_hourly_summary    | ✅ Built     | 72,042    |
+| raw      | yellow_taxi_trips      | ✅ Loaded    | 41,169,300 (all 12 months of 2024) |
+| raw      | taxi_zone_lookup       | ✅ Loaded    | 265        |
+| raw      | ingestion_log          | ✅ Active    | 34 entries |
+| staging  | stg_yellow_taxi_trips  | ✅ Built     | ~41M (full year) |
+| marts    | dim_date               | ✅ Built     | 366        |
+| marts    | dim_location           | ✅ Built     | 265        |
+| marts    | dim_payment_type       | ✅ Built     | 7          |
+| marts    | dim_rate_code          | ✅ Built     | 7          |
+| marts    | fact_trips             | ✅ Built     | 36,472,952 |
+| marts    | fact_hourly_summary    | ✅ Built     | ~866K      |
 
 ### Files Registry
 _Claude MUST update this when creating new files._

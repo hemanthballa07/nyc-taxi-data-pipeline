@@ -22,3 +22,4 @@ Categories: `INFRA`, `INGEST`, `DBT`, `AIRFLOW`, `DASHBOARD`, `DOCS`, `FIX`, `RE
 [2026-04-11] DOCS: Rewrote README.md as portfolio-ready doc — architecture diagram, tech stack table, setup instructions, dashboard insights, design decisions (README.md)
 [2026-04-11] FIX: Added max_active_runs=1 to DAG to prevent concurrent-run race condition on delete-and-reload (dags/nyc_taxi_monthly.py)
 [2026-04-11] INFRA: Removed obsolete version attribute from docker-compose.yml (docker-compose.yml)
+[2026-04-12] INGEST: Loaded all 12 months of 2024 Yellow Taxi data. Months 2–11 were already present from prior session. Month 12 (Dec 2024) ingested via make ingest YEAR=2024 MONTH=12 → 3,668,337 rows. DAG nyc_taxi_monthly triggered for Dec 2024 — all 4 tasks (ingest_trips, dbt_seed, dbt_run, dbt_test) succeeded. Final counts: raw.yellow_taxi_trips = 41,169,300 rows, marts.fact_trips = 36,472,952 rows.

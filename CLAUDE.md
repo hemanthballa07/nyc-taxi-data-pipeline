@@ -1,5 +1,6 @@
 # NYC Taxi Data Pipeline
-
+## Who
+Data engineering learner, completed crash course. Comfortable with basic SQL and Python. Learning dbt, Airflow, and Docker through this project. Explain new concepts briefly when they come up — don't assume prior knowledge of dbt macros, Airflow operators, or Docker networking.
 ## What
 An end-to-end data engineering pipeline that ingests NYC Yellow Taxi trip data, transforms it through a star schema, and serves analytics dashboards. Built as a portfolio project demonstrating production-grade DE patterns.
 
@@ -81,8 +82,18 @@ After making ANY code change, you MUST:
 2. Update `docs/plan.md` — check off completed tasks, add new ones if scope changed
 3. Update `docs/architecture.md` — if schema, pipeline flow, or design decisions changed
 4. If a new file was created, verify it appears in the correct section of this CLAUDE.md project structure
+5. If you find a discrepancy between the docs and the actual code/database state, fix the docs to match reality and note the correction in `docs/changelog.md`. Docs always reflect what IS, not what was planned.
 
 These docs are the project's memory. Without updating them, future sessions lose context. This is non-negotiable.
+
+## Do Not
+- Do not install packages without adding them to `requirements.txt`
+- Do not create files outside the project structure listed above
+- Do not use `pandas.to_sql()` — use `psycopg2.copy_expert()` for bulk loads
+- Do not skip writing tests — every new script gets a test file
+- Do not use `print()` — use the `logging` module
+- Do not modify `docker/init-db.sql` after Postgres has been initialized (use migration scripts instead)
+- Do not start implementing without reading `docs/plan.md` first
 
 ## Important Notes
 - PostgreSQL runs on port 5432 (user: `nyctaxi`, password: `nyctaxi`, db: `nyctaxi`)
@@ -90,3 +101,6 @@ These docs are the project's memory. Without updating them, future sessions lose
 - Metabase runs on port 3000
 - Data downloads go to `data/raw/` — this directory is gitignored
 - For dbt docs, see `dbt/README.md`
+- All database operations must use context managers (`with conn:`) or explicit try/finally
+- All scripts must exit with non-zero status on failure (use `sys.exit(1)`)
+- Log errors with `logger.error()` before raising exceptions
