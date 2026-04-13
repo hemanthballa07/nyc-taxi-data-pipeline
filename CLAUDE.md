@@ -11,43 +11,7 @@ NYC TLC (Parquet) → Python Ingestion → PostgreSQL (raw) → dbt (staging→m
                                           Airflow orchestrates everything
 ```
 
-## Tech Stack
-- **Language**: Python 3.11+
-- **Database**: PostgreSQL 16 (Dockerized)
-- **Transformations**: dbt-core with dbt-postgres adapter
-- **Orchestration**: Apache Airflow 2.x (Dockerized)
-- **Dashboard**: Metabase (Dockerized)
-- **Containerization**: Docker Compose
-- **Data format**: Parquet (source), SQL (warehouse)
-
-## Project Structure
-```
-├── scripts/          # Python ingestion & utility scripts
-├── dbt/              # dbt project (models, tests, macros)
-├── dags/             # Airflow DAG definitions
-├── docker/           # Custom Dockerfiles if needed
-├── tests/            # Python tests for ingestion scripts
-├── data/             # Local data (gitignored)
-│   ├── raw/          # Downloaded Parquet files
-│   └── processed/    # Intermediate outputs
-├── docs/             # Architecture docs, decisions, notes
-└── docker-compose.yml
-```
-
-## Key Commands
-- `make up` — start all services (Postgres, Airflow, Metabase)
-- `make down` — stop all services
-- `make ingest YEAR=2024 MONTH=1` — download and load one month of taxi data
-- `make dbt-run` — run all dbt models
-- `make dbt-test` — run dbt tests
-- `make test` — run Python unit tests
-- `docker compose ps` — check service status
-
-## Data Source
-NYC TLC Yellow Taxi Trip Records: https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page
-- Parquet format, ~3M rows/month, ~50MB/file
-- Key columns: pickup/dropoff datetime, locations (zone IDs), fare, tip, payment type
-- Zone lookup CSV: https://d37ci6vzurychx.cloudfront.net/misc/taxi_zone_lookup.csv
+For schema and architecture details, read `docs/architecture.md`
 
 ## Code Standards
 - Python: use `ruff` for linting, type hints on all function signatures
@@ -94,6 +58,8 @@ These docs are the project's memory. Without updating them, future sessions lose
 - Do not use `print()` — use the `logging` module
 - Do not modify `docker/init-db.sql` after Postgres has been initialized (use migration scripts instead)
 - Do not start implementing without reading `docs/plan.md` first
+- Never run `git add` or `git commit` unless the user explicitly invokes `/commit`
+- Place all generated markdown plans and design docs in `docs/plans/`
 
 ## Important Notes
 - PostgreSQL runs on port 5432 (user: `nyctaxi`, password: `nyctaxi`, db: `nyctaxi`)

@@ -42,8 +42,12 @@ docker/volumes/
 .DS_Store
 Thumbs.db
 
-# Claude Code local notes
+# Claude Code local tooling (not project source)
 CLAUDE.local.md
+.claude/commands/
+.claude/skills/
+.claude/memory/
+.claude/settings.local.json
 dbt/.venv/
 
 # Generated data quality reports (created at runtime by scripts/run_ge.py)
