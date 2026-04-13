@@ -2,7 +2,7 @@
 
 # NYC Taxi Data Pipeline
 
-An end-to-end data engineering portfolio project that ingests all 12 months of 2024 NYC Yellow Taxi trip records (41M rows), validates data quality with Great Expectations, transforms the data through a star schema using incremental dbt models, orchestrates everything with a 5-task Airflow DAG, and serves analytics through a Metabase dashboard — all running locally on Docker with CI via GitHub Actions.
+An end-to-end data engineering portfolio project that ingests all 12 months of 2024 NYC Yellow Taxi trip records (41M rows), simulates real-time trip events through a Kafka + PySpark streaming layer, validates data quality with Great Expectations, transforms the data through a star schema using incremental dbt models, orchestrates everything with a 5-task Airflow DAG, and serves analytics through a Metabase dashboard — all running locally on Docker with CI via GitHub Actions.
 
 ---
 
@@ -57,6 +57,12 @@ An end-to-end data engineering portfolio project that ingests all 12 months of 2
           │  GitHub Actions CI — every push and PR                          │
           │  pytest tests/ · dbt parse                                      │
           └──────────────────────────────────────────────────────────────────┘
+
+── Streaming Path (runs alongside the batch pipeline) ──────────────────────────
+
+  Python Producer ──► Kafka (Docker, KRaft) ──► PySpark Consumer ──► raw.live_trips
+  (replay 2024 data    topic: taxi-trips          foreachBatch          ► stg_live_trips
+   at 60× real time)   apache/kafka 4.2.0         JDBC sink             (incremental append)
 ```
 
 ---
@@ -84,6 +90,8 @@ An end-to-end data engineering portfolio project that ingests all 12 months of 2
 | Data quality | Great Expectations | 0.18.22 | 10 expectations, HTML report per run |
 | Transformation | dbt-core + dbt-postgres | 1.11 / 1.10 | Incremental ELT: staging → dims → facts |
 | Orchestration | Apache Airflow | 2.9.3 | 5-task DAG, retries, soft-fail GE step |
+| Streaming broker | Apache Kafka | 4.2.0 | KRaft single-node broker, topic taxi-trips |
+| Stream processing | PySpark Structured Streaming | 4.1.1 | foreachBatch consumer, JDBC sink to Postgres |
 | Dashboard | Metabase | 0.59 | Self-serve BI on mart tables |
 | Containerization | Docker Compose | — | Single-command local environment |
 | CI | GitHub Actions | — | pytest + dbt parse on every push/PR |
@@ -157,6 +165,79 @@ Four charts built on the mart tables, using January 2024 data:
 
 ---
 
+## Streaming Layer
+
+The pipeline simulates a real-time ingestion path alongside the monthly batch load. A Python producer replays the 2024 trip data as JSON events on a Kafka topic; a PySpark Structured Streaming consumer reads those events and writes them to `raw.live_trips` every 10 seconds. A separate dbt model (`stg_live_trips`) cleans the streaming table using the same logic as the batch staging model.
+
+### Architecture addition
+
+```
+Python Producer ──► Kafka (Docker) ──► PySpark Consumer ──► raw.live_trips
+                    topic: taxi-trips   foreachBatch          ► stg_live_trips
+```
+
+**`raw.live_trips` schema** (key columns):
+
+| Column | Type | Notes |
+|---|---|---|
+| `event_id` | TEXT | Deterministic: `concat(kafka_partition, '-', kafka_offset)` |
+| `kafka_offset` | BIGINT | Kafka topic offset |
+| `kafka_partition` | INTEGER | Kafka topic partition |
+| `ingested_at` | TIMESTAMPTZ | When PySpark committed the batch |
+| *(19 trip columns)* | — | Same types as `raw.yellow_taxi_trips` |
+
+A `UNIQUE(kafka_partition, kafka_offset)` constraint enforces idempotency at the database level — restarting the consumer with a deleted checkpoint cannot produce duplicate rows.
+
+### Environment requirements
+
+The streaming stack has two environment dependencies beyond the main pipeline:
+
+| Requirement | Why |
+|---|---|
+| **Python 3.13** (`.streaming-venv`) | The main venv uses Python 3.14, which PySpark 4.x does not yet support. A separate venv is created from Homebrew's `python3.13`. |
+| **Java 21 LTS** (`/opt/homebrew/opt/openjdk@21`) | Java 23 (default on this machine) removed `Subject.getSubject()`, an API still called by Hadoop 3.4.2 bundled in PySpark 4.1.1. `make streaming-consumer` sets `JAVA_HOME` to Java 21 automatically. |
+
+### Setup
+
+```bash
+# One-time setup — creates .streaming-venv, installs PySpark, downloads all JARs
+# (PostgreSQL JDBC driver + Kafka connector pre-installed into PySpark's jars dir)
+make streaming-setup
+make streaming-jars
+
+# If Java 21 is not installed:
+brew install openjdk@21
+```
+
+### Running the streaming pipeline
+
+Open two terminals from the project root:
+
+```bash
+# Terminal 1 — start Kafka, then run the producer (replays 2024 data at 60× speed)
+make streaming-kafka-up
+make streaming-producer
+
+# Terminal 2 — start the PySpark consumer (processes a micro-batch every 10 seconds)
+make streaming-consumer
+```
+
+After ~30 seconds:
+
+```bash
+# Verify rows are landing
+make psql
+# SELECT count(*), max(ingested_at) FROM raw.live_trips;
+
+# Run the dbt model over the live data
+make dbt-run  # or: cd dbt && dbt run --select stg_live_trips
+make dbt-test #      cd dbt && dbt test --select stg_live_trips
+```
+
+Stop with `Ctrl+C` in each terminal. The Spark checkpoint in `streaming_checkpoint/` preserves Kafka offsets so the consumer resumes from where it left off on restart.
+
+---
+
 ## Data Model
 
 ```
@@ -169,14 +250,16 @@ dim_location ──▶├── fact_trips (36.5M rows) ──▶ dim_payment_ty
 fact_hourly_summary (~866K rows) — pre-aggregated from fact_trips
 ```
 
-| Schema | Table | Rows (full year) |
-|---|---|---|
-| raw | yellow_taxi_trips | 41,169,300 |
-| staging | stg_yellow_taxi_trips | 41,169,300 |
-| marts | fact_trips | 36,472,952 |
-| marts | fact_hourly_summary | ~866,000 |
-| marts | dim_date | 366 |
-| marts | dim_location | 265 |
+| Schema | Table | Rows | Source |
+|---|---|---|---|
+| raw | yellow_taxi_trips | 41,169,300 | Batch (monthly Parquet) |
+| raw | live_trips | grows with streaming | Streaming (Kafka → PySpark) |
+| staging | stg_yellow_taxi_trips | 41,169,300 | Batch (incremental delete+insert) |
+| staging | stg_live_trips | grows with streaming | Streaming (incremental append) |
+| marts | fact_trips | 36,472,952 | Batch |
+| marts | fact_hourly_summary | ~866,000 | Batch |
+| marts | dim_date | 366 | Batch |
+| marts | dim_location | 265 | Batch |
 
 ---
 
