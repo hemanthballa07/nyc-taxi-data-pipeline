@@ -92,11 +92,10 @@ _Add new tasks under the correct phase if scope changes._
 - [x] CI green on GitHub Actions
 
 ## Phase 6: Polish (Days 17-18)
-- [ ] Write comprehensive README.md
+- [x] Write comprehensive README.md
 - [ ] Export architecture diagram as image
-- [ ] Record 2-minute demo walkthrough
 - [ ] Final code review and cleanup
-- [ ] Push to GitHub
+- [x] Push to GitHub
 
 ---
 
