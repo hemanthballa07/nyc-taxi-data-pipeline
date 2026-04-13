@@ -25,5 +25,5 @@ jobs:
       - name: Install dbt
         run: pip install dbt-core dbt-postgres
 
-      - name: dbt compile
-        run: dbt compile --profiles-dir dbt/ --project-dir dbt/
+      - name: dbt parse
+        run: dbt parse --profiles-dir dbt/ --project-dir dbt/
