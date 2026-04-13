@@ -4,8 +4,8 @@ _This is a living document. Claude MUST update task checkboxes after completing 
 _Mark tasks: `[x]` when done, `[~]` if partially done, `[ ]` if not started._
 _Add new tasks under the correct phase if scope changes._
 
-**Current Phase: 4 — Orchestration (Complete)**
-**Last Updated: 2026-04-11**
+**Current Phase: 7 — Data Quality (Complete)**
+**Last Updated: 2026-04-12**
 
 ---
 
@@ -60,6 +60,15 @@ _Add new tasks under the correct phase if scope changes._
 - [x] Build chart: data quality anomaly rate by day (line)
 - [x] Assemble all 4 into "NYC Taxi — January 2024" dashboard
 - [x] Save dashboard screenshot to docs/dashboard_screenshot.png
+
+## Phase 7: Data Quality (Complete)
+- [x] Brainstorm GE design — approved Option 1 (standalone script, soft fail)
+- [x] Write implementation plan to docs/plans/great-expectations.md
+- [x] Write scripts/run_ge.py — 10 expectations, EphemeralDataContext, HTML report
+- [x] Write tests/test_run_ge.py — 7 unit tests, all passing
+- [x] Add ge_validate task to nyc_taxi_monthly DAG (between ingest_trips and dbt_seed)
+- [x] Add great-expectations==0.18.22 to requirements.txt and docker-compose.yml
+- [x] Gitignore docs/ge_report/ (generated at runtime)
 
 ## Phase 6: Polish (Days 17-18)
 - [ ] Write comprehensive README.md

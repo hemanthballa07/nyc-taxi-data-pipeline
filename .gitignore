@@ -45,3 +45,6 @@ Thumbs.db
 # Claude Code local notes
 CLAUDE.local.md
 dbt/.venv/
+
+# Generated data quality reports (created at runtime by scripts/run_ge.py)
+docs/ge_report/

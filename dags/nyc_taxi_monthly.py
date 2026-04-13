@@ -3,9 +3,13 @@ NYC Taxi Monthly Pipeline DAG
 
 Orchestrates the full pipeline for a given year/month:
   1. ingest_trips  — download Parquet from TLC + bulk-load into raw.yellow_taxi_trips
-  2. dbt_seed      — reload static dimension seeds (payment type, rate code)
-  3. dbt_run       — rebuild all dbt models: staging → dims → facts
-  4. dbt_test      — run all 33 schema tests + 2 singular tests
+  2. ge_validate   — run 10 Great Expectations checks; save HTML report to docs/ge_report/
+  3. dbt_seed      — reload static dimension seeds (payment type, rate code)
+  4. dbt_run       — rebuild all dbt models: staging → dims → facts
+  5. dbt_test      — run all 33 schema tests + 2 singular tests
+
+ge_validate is a soft-fail step: it always exits 0 so the pipeline continues
+even when checks fail. Failures are visible in the task logs and the HTML report.
 
 Trigger manually:
   airflow dags trigger nyc_taxi_monthly --conf '{"year": 2024, "month": 1}'
@@ -93,4 +97,18 @@ with DAG(
         ),
     )
 
-    ingest_trips >> dbt_seed >> dbt_run >> dbt_test
+    ge_validate = BashOperator(
+        task_id="ge_validate",
+        bash_command=(
+            f"python {SCRIPTS_DIR}/run_ge.py "
+            "--year {{ params.year }} --month {{ params.month }}"
+        ),
+        retries=0,  # GE failures are data issues, not transient — don't retry
+        doc_md=(
+            "Run 10 Great Expectations checks on `raw.yellow_taxi_trips` for the "
+            "target month. Saves an HTML report to `docs/ge_report/YYYY-MM.html`. "
+            "Soft fail — always exits 0 so the pipeline continues."
+        ),
+    )
+
+    ingest_trips >> ge_validate >> dbt_seed >> dbt_run >> dbt_test

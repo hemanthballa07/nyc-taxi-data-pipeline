@@ -8,7 +8,7 @@ x-airflow-common: &airflow-common
     AIRFLOW__CORE__LOAD_EXAMPLES: "false"
     AIRFLOW__WEBSERVER__SECRET_KEY: "nyc-taxi-pipeline-secret"
     AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "true"
-    _PIP_ADDITIONAL_REQUIREMENTS: "dbt-core dbt-postgres"
+    _PIP_ADDITIONAL_REQUIREMENTS: "dbt-core dbt-postgres great-expectations==0.18.22 sqlalchemy"
     POSTGRES_HOST: postgres
     POSTGRES_PORT: "5432"
   volumes:
@@ -16,6 +16,7 @@ x-airflow-common: &airflow-common
     - ./scripts:/opt/airflow/scripts
     - ./dbt:/opt/airflow/dbt
     - ./data:/opt/airflow/data
+    - ./docs:/opt/airflow/docs
     - airflow-logs:/opt/airflow/logs
   depends_on:
     postgres:

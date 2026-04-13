@@ -1,7 +1,7 @@
 # Architecture
 
 ## Current State
-_Last updated: 2026-04-12_
+_Last updated: 2026-04-12 (added GE data quality layer)_
 
 | Component         | Status       | Notes                              |
 |-------------------|--------------|------------------------------------|
@@ -9,9 +9,10 @@ _Last updated: 2026-04-12_
 | PostgreSQL schemas| ✅ Defined   | raw, staging, marts in init-db.sql |
 | Ingestion script  | ✅ Built       | scripts/ingest.py                |
 | dbt project       | ✅ Built       | dbt 1.11.8, Python 3.13 venv       |
-| Airflow DAGs      | ✅ Built       | dags/nyc_taxi_monthly.py, 4 tasks |
+| Airflow DAGs      | ✅ Built       | dags/nyc_taxi_monthly.py, 5 tasks |
 | Metabase dashboard| ✅ Built       | 4 charts, Postgres-backed config  |
-| Tests             | ⬜ Not started |                                  |
+| Data quality (GE) | ✅ Built       | scripts/run_ge.py, 10 expectations, HTML report |
+| Tests             | ✅ Built       | 7 GE unit tests, ingest unit tests |
 
 ### Tables in Database
 | Schema   | Table                  | Status       | Row Count |

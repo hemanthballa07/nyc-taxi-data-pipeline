@@ -20,3 +20,11 @@ ruff>=0.1.0
 # Utilities
 python-dotenv>=1.0.0
 click>=8.1.0
+
+# Data quality
+# GE requires Python <=3.12 (Pydantic V1 incompatible with 3.13+).
+# In this project GE runs inside the Airflow container (Python 3.11).
+# To run scripts/run_ge.py locally, use a Python 3.11 or 3.12 venv.
+great-expectations==0.18.22
+sqlalchemy>=2.0,<3.0
+jinja2>=3.1.0          # also pulled by dbt; pin explicitly for run_ge.py
