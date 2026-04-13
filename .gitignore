@@ -52,3 +52,8 @@ dbt/.venv/
 
 # Generated data quality reports (created at runtime by scripts/run_ge.py)
 docs/ge_report/
+
+# Streaming
+jars/
+streaming_checkpoint/
+.streaming-venv/

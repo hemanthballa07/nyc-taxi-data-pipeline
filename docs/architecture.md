@@ -1,18 +1,22 @@
 # Architecture
 
 ## Current State
-_Last updated: 2026-04-12 (added GE data quality layer)_
+_Last updated: 2026-04-13 (added streaming layer: Kafka + PySpark Structured Streaming)_
 
-| Component         | Status       | Notes                              |
-|-------------------|--------------|------------------------------------|
-| Docker Compose    | ✅ Defined   | Postgres, Airflow, Metabase        |
-| PostgreSQL schemas| ✅ Defined   | raw, staging, marts in init-db.sql |
-| Ingestion script  | ✅ Built       | scripts/ingest.py                |
-| dbt project       | ✅ Built       | dbt 1.11.8, Python 3.13 venv       |
-| Airflow DAGs      | ✅ Built       | dags/nyc_taxi_monthly.py, 5 tasks |
-| Metabase dashboard| ✅ Built       | 4 charts, Postgres-backed config  |
-| Data quality (GE) | ✅ Built       | scripts/run_ge.py, 10 expectations, HTML report |
-| Tests             | ✅ Built       | 7 GE unit tests, ingest unit tests |
+| Component              | Status       | Notes                                          |
+|------------------------|--------------|------------------------------------------------|
+| Docker Compose         | ✅ Defined   | Postgres, Airflow, Metabase, Kafka             |
+| PostgreSQL schemas     | ✅ Defined   | raw, staging, marts in init-db.sql             |
+| Ingestion script       | ✅ Built     | scripts/ingest.py                              |
+| dbt project            | ✅ Built     | dbt 1.11.8, Python 3.13 venv                   |
+| Airflow DAGs           | ✅ Built     | dags/nyc_taxi_monthly.py, 5 tasks              |
+| Metabase dashboard     | ✅ Built     | 4 charts, Postgres-backed config               |
+| Data quality (GE)      | ✅ Built     | scripts/run_ge.py, 10 expectations, HTML report |
+| Tests                  | ✅ Built     | 7 GE unit tests, ingest unit tests             |
+| Kafka (streaming)      | ✅ Built     | apache/kafka:latest (4.2.0), KRaft mode, port 9092 |
+| PySpark consumer       | ✅ Built     | streaming/consumer.py, foreachBatch → raw.live_trips |
+| Streaming producer     | ✅ Built     | streaming/producer.py, replays 2024 data at 60× speed |
+| stg_live_trips (dbt)   | ✅ Built     | incremental append model over raw.live_trips   |
 
 ### Tables in Database
 | Schema   | Table                  | Status       | Row Count |
@@ -20,7 +24,9 @@ _Last updated: 2026-04-12 (added GE data quality layer)_
 | raw      | yellow_taxi_trips      | ✅ Loaded    | 41,169,300 (all 12 months of 2024) |
 | raw      | taxi_zone_lookup       | ✅ Loaded    | 265        |
 | raw      | ingestion_log          | ✅ Active    | 34 entries |
+| raw      | live_trips             | ✅ Active    | streaming (10K rows in demo run)   |
 | staging  | stg_yellow_taxi_trips  | ✅ Built     | ~41M (full year) |
+| staging  | stg_live_trips         | ✅ Built     | grows with streaming ingest        |
 | marts    | dim_date               | ✅ Built     | 366        |
 | marts    | dim_location           | ✅ Built     | 265        |
 | marts    | dim_payment_type       | ✅ Built     | 7          |
@@ -34,11 +40,17 @@ _Claude MUST update this when creating new files._
 | File | Purpose | Created |
 |------|---------|---------|
 | `scripts/ingest.py` | Download + load TLC data | 2026-04-11 |
-| `dbt/models/staging/stg_yellow_taxi_trips.sql` | Clean raw trips | — |
+| `dbt/models/staging/stg_yellow_taxi_trips.sql` | Clean raw trips (batch) | — |
 | `dbt/models/marts/dim_date.sql` | Date dimension | — |
 | `dbt/models/marts/dim_location.sql` | Zone lookup dimension | — |
 | `dbt/models/marts/fact_trips.sql` | Core fact table | — |
 | `dags/nyc_taxi_monthly.py` | Airflow DAG | — |
+| `scripts/streaming/migrate_live_trips.py` | Create raw.live_trips (idempotent) | 2026-04-13 |
+| `streaming/producer.py` | Replay batch data as Kafka events | 2026-04-13 |
+| `streaming/consumer.py` | PySpark Structured Streaming → raw.live_trips | 2026-04-13 |
+| `streaming/download_jars.py` | Download JDBC + Kafka connector JARs | 2026-04-13 |
+| `dbt/models/staging/stg_live_trips.sql` | Clean streaming trips (incremental append) | 2026-04-13 |
+| `dbt/macros/clean_trip_fields.sql` | Shared 19-column cast macro for stg_ models | 2026-04-13 |
 
 ---
 
@@ -84,6 +96,12 @@ _Claude MUST update this when creating new files._
                         │  Orchestrates the full pipeline  │
                         │  on a monthly schedule           │
                         └──────────────────────────────────┘
+
+── Streaming Path (parallel to batch) ─────────────────────────────────────────
+
+Python Producer ──► Kafka (Docker) ──► PySpark Consumer ──► raw.live_trips
+(replay 2024 data)   topic: taxi-trips   (local, Java 21)      ► stg_live_trips
+                     apache/kafka:4.2.0  streaming_checkpoint   (incremental append)
 ```
 
 ## Star Schema

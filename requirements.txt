@@ -21,6 +21,9 @@ ruff>=0.1.0
 python-dotenv>=1.0.0
 click>=8.1.0
 
+# Streaming (producer only — PySpark consumer uses .streaming-venv with Python 3.13)
+confluent-kafka>=2.3.0
+
 # Data quality
 # GE requires Python <=3.12 (Pydantic V1 incompatible with 3.13+).
 # In this project GE runs inside the Airflow container (Python 3.11).

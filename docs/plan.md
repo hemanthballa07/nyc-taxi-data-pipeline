@@ -4,7 +4,7 @@ _This is a living document. Claude MUST update task checkboxes after completing 
 _Mark tasks: `[x]` when done, `[~]` if partially done, `[ ]` if not started._
 _Add new tasks under the correct phase if scope changes._
 
-**Current Phase: 9 — CI/CD (Complete)**
+**Current Phase: 10 — Streaming (Complete)**
 **Last Updated: 2026-04-13**
 
 ---
@@ -90,6 +90,23 @@ _Add new tasks under the correct phase if scope changes._
 - [x] dbt parse — validates Jinja2/ref()/source() without database connection
 - [x] Fix: switched from dbt compile to dbt parse to avoid localhost:5433 connection attempt
 - [x] CI green on GitHub Actions
+
+## Phase 10: Streaming (Complete)
+- [x] Brainstorm streaming design — approved Approach C (Kafka in Docker, PySpark local, Java 21)
+- [x] Write implementation plan to docs/plans/ (abstract-floating-truffle.md)
+- [x] Add `kafka` service to docker-compose.yml (apache/kafka:latest, KRaft mode, port 9092)
+- [x] Write scripts/streaming/migrate_live_trips.py — creates raw.live_trips with TEXT event_id and UNIQUE(kafka_partition, kafka_offset) constraint
+- [x] Write streaming/producer.py — replays raw.yellow_taxi_trips as JSON events at configurable speed multiplier (default 60×)
+- [x] Write streaming/consumer.py — PySpark Structured Streaming, foreachBatch JDBC sink, deterministic event_id = concat(partition, '-', offset)
+- [x] Write streaming/download_jars.py — downloads PostgreSQL JDBC + Kafka connector JARs into PySpark's jars dir
+- [x] Create .streaming-venv with Python 3.13 (main venv is Python 3.14, incompatible with PySpark)
+- [x] Install Java 21 LTS via Homebrew formula (Java 23 removes Subject.getSubject() used by Hadoop 3.4.2 bundled in PySpark)
+- [x] Add clean_trip_fields dbt macro (19 shared trip field casts, no surrogate keys or streaming metadata)
+- [x] Refactor stg_yellow_taxi_trips to use clean_trip_fields macro — 9/9 tests pass
+- [x] Write stg_live_trips dbt model (incremental append, unique_key=event_id)
+- [x] Update sources.yml and schema.yml for raw.live_trips and stg_live_trips
+- [x] Add streaming-* Makefile targets
+- [x] Verify: 10,000 rows in raw.live_trips, 12/12 dbt tests pass on stg_live_trips
 
 ## Phase 6: Polish (Days 17-18)
 - [x] Write comprehensive README.md

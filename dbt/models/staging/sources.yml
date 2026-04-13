@@ -47,6 +47,22 @@ sources:
           - name: airport_fee
             description: Airport pickup/dropoff fee
 
+      - name: live_trips
+        description: >
+          Real-time taxi trip events written by the PySpark Structured Streaming consumer.
+          Each row is one Kafka message from the taxi-trips topic.
+          event_id is deterministic: concat(kafka_partition::text, '-', kafka_offset::text).
+          The UNIQUE(kafka_partition, kafka_offset) constraint on the raw table enforces idempotency.
+        columns:
+          - name: event_id
+            description: Deterministic row identifier — concat(kafka_partition, '-', kafka_offset). TEXT type.
+          - name: kafka_offset
+            description: Kafka topic offset for this message (BIGINT)
+          - name: kafka_partition
+            description: Kafka topic partition for this message (INTEGER)
+          - name: ingested_at
+            description: Timestamp when the PySpark consumer committed this row to Postgres
+
       - name: taxi_zone_lookup
         description: TLC taxi zone reference data — 265 zones with borough and service zone.
         columns:
