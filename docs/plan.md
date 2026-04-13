@@ -4,7 +4,7 @@ _This is a living document. Claude MUST update task checkboxes after completing 
 _Mark tasks: `[x]` when done, `[~]` if partially done, `[ ]` if not started._
 _Add new tasks under the correct phase if scope changes._
 
-**Current Phase: 8 — Incremental Models (Complete)**
+**Current Phase: 9 — CI/CD (Complete)**
 **Last Updated: 2026-04-13**
 
 ---
@@ -81,6 +81,15 @@ _Add new tasks under the correct phase if scope changes._
 - [x] Verify incremental run: 2.96M rows (Jan 2024 only), 3m35s vs 9m23s full refresh
 - [x] Verify compiled DELETE SQL: dbt_internal_dest predicate scoped to target month
 - [x] All 23 dbt tests pass; DAG all 5 tasks green end-to-end
+
+## Phase 9: CI/CD (Complete)
+- [x] Brainstorm CI/CD design — approved pytest + dbt parse (no DB needed in CI)
+- [x] Write implementation plan to docs/plans/ci-cd.md
+- [x] Create .github/workflows/ci.yml — triggers on push and PR
+- [x] pytest tests/ -v — all unit tests pass in CI (fully mocked, no infra needed)
+- [x] dbt parse — validates Jinja2/ref()/source() without database connection
+- [x] Fix: switched from dbt compile to dbt parse to avoid localhost:5433 connection attempt
+- [x] CI green on GitHub Actions
 
 ## Phase 6: Polish (Days 17-18)
 - [ ] Write comprehensive README.md
