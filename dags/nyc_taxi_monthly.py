@@ -80,10 +80,16 @@ with DAG(
 
     dbt_run = BashOperator(
         task_id="dbt_run",
-        bash_command=f"cd {DBT_DIR} && {DBT} run --profiles-dir .",
+        # --vars passes year/month so incremental models filter to the target month.
+        # Month boundaries are computed in SQL via make_date() + interval '1 month'.
+        bash_command=(
+            f"cd {DBT_DIR} && {DBT} run --profiles-dir . "
+            '--vars \'{"year": {{ params.year }}, "month": {{ params.month }}}\''
+        ),
         doc_md=(
-            "Rebuild all dbt models in dependency order: "
-            "`stg_yellow_taxi_trips` → dims → `fact_trips` → `fact_hourly_summary`."
+            "Run all dbt models with year/month vars. `stg_yellow_taxi_trips` and `fact_trips` "
+            "are incremental — only the target month's rows are processed via delete+insert. "
+            "Dims and `fact_hourly_summary` rebuild in full."
         ),
     )
 

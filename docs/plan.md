@@ -4,8 +4,8 @@ _This is a living document. Claude MUST update task checkboxes after completing 
 _Mark tasks: `[x]` when done, `[~]` if partially done, `[ ]` if not started._
 _Add new tasks under the correct phase if scope changes._
 
-**Current Phase: 7 — Data Quality (Complete)**
-**Last Updated: 2026-04-12**
+**Current Phase: 8 — Incremental Models (Complete)**
+**Last Updated: 2026-04-13**
 
 ---
 
@@ -69,6 +69,18 @@ _Add new tasks under the correct phase if scope changes._
 - [x] Add ge_validate task to nyc_taxi_monthly DAG (between ingest_trips and dbt_seed)
 - [x] Add great-expectations==0.18.22 to requirements.txt and docker-compose.yml
 - [x] Gitignore docs/ge_report/ (generated at runtime)
+
+## Phase 8: Incremental Models (Complete)
+- [x] Brainstorm incremental model design — approved delete+insert with trip_id md5 key
+- [x] Write implementation plan to docs/plans/incremental-models.md
+- [x] Convert stg_yellow_taxi_trips to incremental with delete+insert, unique_key=trip_id
+- [x] Convert fact_trips to incremental with same pattern, trip_id carried from staging
+- [x] Add trip_id column with not_null test to staging/schema.yml and marts/schema.yml
+- [x] Fix incremental_predicates rendering: set-vars before config(), use ~ concatenation
+- [x] Update nyc_taxi_monthly DAG dbt_run to pass --vars year/month
+- [x] Verify incremental run: 2.96M rows (Jan 2024 only), 3m35s vs 9m23s full refresh
+- [x] Verify compiled DELETE SQL: dbt_internal_dest predicate scoped to target month
+- [x] All 23 dbt tests pass; DAG all 5 tasks green end-to-end
 
 ## Phase 6: Polish (Days 17-18)
 - [ ] Write comprehensive README.md

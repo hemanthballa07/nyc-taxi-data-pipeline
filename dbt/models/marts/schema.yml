@@ -44,6 +44,13 @@ models:
       One row per clean NYC Yellow Taxi trip. Anomalous rows (negative fares, null passengers,
       extreme durations) are excluded. Natural foreign keys reference dim tables.
     columns:
+      - name: trip_id
+        description: >
+          MD5 surrogate key carried from stg_yellow_taxi_trips. Used as the
+          unique_key for incremental delete+insert idempotency.
+        tests:
+          - not_null
+
       - name: pickup_datetime
         description: Trip pickup timestamp
         tests:

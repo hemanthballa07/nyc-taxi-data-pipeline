@@ -8,6 +8,16 @@ models:
       Anomalous rows are flagged with is_anomaly = true but not dropped — marts filter as needed.
 
     columns:
+      - name: trip_id
+        description: >
+          MD5 surrogate key derived from pickup_datetime, dropoff_datetime,
+          pickup_location_id, dropoff_location_id, vendor_id, and fare_amount.
+          Used as the unique_key for incremental delete+insert. True duplicate
+          trips (identical on all 6 fields) hash identically — deduplication
+          is intentional, not a bug.
+        tests:
+          - not_null
+
       - name: vendor_id
         description: Taxi vendor identifier (1 = Creative Mobile Technologies, 2 = VeriFone)
 
