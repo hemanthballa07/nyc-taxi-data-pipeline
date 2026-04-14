@@ -122,7 +122,7 @@ make dbt-test
 | Service | URL | Credentials |
 |---|---|---|
 | Airflow | http://localhost:8080 | airflow / airflow |
-| Metabase | http://localhost:3000 | admin@nyctaxi.local / Admin1234! |
+| Metabase | http://localhost:3000 | On first login, create an admin account with your preferred email and password. |
 | PostgreSQL | localhost:5433 | nyctaxi / nyctaxi / nyctaxi |
 
 ### Run the full pipeline via Airflow DAG (recommended)
